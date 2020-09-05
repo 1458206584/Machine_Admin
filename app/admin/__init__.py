@@ -11,4 +11,3 @@ from flask import Blueprint
 admin = Blueprint('admin',__name__)
 # 导入views文件
 import app.admin.views
-
