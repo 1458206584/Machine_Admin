@@ -1,7 +1,7 @@
 # coding:utf8
 from . import admin
 from flask import render_template, redirect, url_for, flash, session, request, abort
-from app.admin.forms import LoginForm,AdminForm,PwdForm
+from app.admin.forms import LoginForm,AdminForm,PwdForm,RoleForm,AuthForm
 from app.models import Admin,  Oplog, Adminlog,Role,Auth
 from functools import wraps
 from app import db, app
@@ -152,227 +152,161 @@ def pwd():
         redirect(url_for('admin.logout'))
     return render_template("admin/pwd.html", form=form)
 
+# 添加角色
+@admin.route("/role/add/", methods=["GET", "POST"])
+@admin_login_req
+# @admin_auth
+def role_add():
+    form = RoleForm()
+    if form.validate_on_submit():
+        data = form.data
+        role = Role(
+            name=data["name"],
+            auths=",".join(map(lambda v: str(v), data["auths"]))
+        )
+        db.session.add(role)
+        db.session.commit()
+        flash("添加角色成功！", "ok")
+    return render_template("admin/role_add.html", form=form)
+
+# 角色列表
+@admin.route("/role/list/<int:page>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def role_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Role.query.order_by(
+        Role.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/role_list.html", page_data=page_data)
+
+# 编辑角色
+@admin.route("/role/edit/<int:id>/", methods=["GET", "POST"])
+@admin_login_req
+# @admin_auth
+def role_edit(id=None):
+    form = RoleForm()
+    role = Role.query.get_or_404(id)
+    if request.method == "GET":
+        auths = role.auths
+        form.auths.data = list(map(lambda v: int(v), auths.split(",")))
+    if form.validate_on_submit():
+        data = form.data
+        role.name = data["name"]
+        role.auths = ",".join(map(lambda v: str(v), data["auths"]))
+        db.session.add(role)
+        db.session.commit()
+        flash("修改角色成功！", "ok")
+    return render_template("admin/role_edit.html", form=form, role=role)
+
+# 删除角色
+@admin.route("/role/del/<int:id>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def role_del(id=None):
+    role = Role.query.filter_by(id=id).first_or_404()
+    db.session.delete(role)
+    db.session.commit()
+    flash("删除角色成功！", "ok")
+    return redirect(url_for('admin.role_list', page=1))
+
+
+# 操作日志
+@admin.route("/oplog/list/<int:page>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def oplog_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Oplog.query.join(
+        Admin
+    ).filter(
+        Admin.id == Oplog.admin_id,
+    ).order_by(
+        Oplog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/oplog_list.html", page_data=page_data)
+
+
+# 管理员登录日志
+@admin.route("/adminloginlog/list/<int:page>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def adminloginlog_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Adminlog.query.join(
+        Admin
+    ).filter(
+        Admin.id == Adminlog.admin_id,
+    ).order_by(
+        Adminlog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/adminloginlog_list.html", page_data=page_data)
 
 
 
 
-
-
-
-
-
-
-
-
-# # 会员列表
-# @admin.route("/user/list/<int:page>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def user_list(page=None):
-#     if page is None:
-#         page = 1
-#     page_data = User.query.order_by(
-#         User.addtime.desc()
-#     ).paginate(page=page, per_page=10)
-#     return render_template("admin/user_list.html", page_data=page_data)
+# 权限添加
+@admin.route("/auth/add/", methods=["GET", "POST"])
+@admin_login_req
+# @admin_auth
+def auth_add():
+    form = AuthForm()
+    if form.validate_on_submit():
+        data = form.data
+        auth = Auth(
+            name=data["name"],
+            url=data["url"]
+        )
+        db.session.add(auth)
+        db.session.commit()
+        flash("添加权限成功！", "ok")
+    return render_template("admin/auth_add.html", form=form)
 #
 #
-# # 查看会员
-# @admin.route("/user/view/<int:id>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def user_view(id=None):
-#     user = User.query.get_or_404(int(id))
-#     return render_template("admin/user_view.html", user=user)
-#
-#
-# # 删除会员
-# @admin.route("/user/del/<int:id>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def user_del(id=None):
-#     user = User.query.get_or_404(int(id))
-#     db.session.delete(user)
-#     db.session.commit()
-#     flash("删除会员成功！", "ok")
-#     return redirect(url_for('admin.user_list', page=1))
+# 权限列表
+@admin.route("/auth/list/<int:page>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def auth_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Auth.query.order_by(
+        Auth.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    print(page_data)
+    return render_template("admin/auth_list.html", page_data=page_data)
 
 
+# 权限删除
+@admin.route("/auth/del/<int:id>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def auth_del(id=None):
+    auth = Auth.query.filter_by(id=id).first_or_404()
+    db.session.delete(auth)
+    db.session.commit()
+    flash("删除标签成功！", "ok")
+    return redirect(url_for('admin.auth_list', page=1))
 
 
-
-# # 操作日志
-# @admin.route("/oplog/list/<int:page>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def oplog_list(page=None):
-#     if page is None:
-#         page = 1
-#     page_data = Oplog.query.join(
-#         Admin
-#     ).filter(
-#         Admin.id == Oplog.admin_id,
-#     ).order_by(
-#         Oplog.addtime.desc()
-#     ).paginate(page=page, per_page=10)
-#     return render_template("admin/oplog_list.html", page_data=page_data)
-
-
-# # 管理员登录日志
-# @admin.route("/adminloginlog/list/<int:page>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def adminloginlog_list(page=None):
-#     if page is None:
-#         page = 1
-#     page_data = Adminlog.query.join(
-#         Admin
-#     ).filter(
-#         Admin.id == Adminlog.admin_id,
-#     ).order_by(
-#         Adminlog.addtime.desc()
-#     ).paginate(page=page, per_page=10)
-#     return render_template("admin/adminloginlog_list.html", page_data=page_data)
-
-
-# # 会员登录日志
-# @admin.route("/userloginlog/list/<int:page>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def userloginlog_list(page=None):
-#     if page is None:
-#         page = 1
-#     page_data = Userlog.query.join(
-#         User
-#     ).filter(
-#         User.id == Userlog.user_id,
-#     ).order_by(
-#         Userlog.addtime.desc()
-#     ).paginate(page=page, per_page=10)
-#     return render_template("admin/userloginlog_list.html", page_data=page_data)
-
-
-# # 添加角色
-# @admin.route("/role/add/", methods=["GET", "POST"])
-# @admin_login_req
-# # @admin_auth
-# def role_add():
-#     form = RoleForm()
-#     if form.validate_on_submit():
-#         data = form.data
-#         role = Role(
-#             name=data["name"],
-#             auths=",".join(map(lambda v: str(v), data["auths"]))
-#         )
-#         db.session.add(role)
-#         db.session.commit()
-#         flash("添加角色成功！", "ok")
-#     return render_template("admin/role_add.html", form=form)
-#
-#
-# # 编辑角色
-# @admin.route("/role/edit/<int:id>/", methods=["GET", "POST"])
-# @admin_login_req
-# # @admin_auth
-# def role_edit(id=None):
-#     form = RoleForm()
-#     role = Role.query.get_or_404(id)
-#     if request.method == "GET":
-#         auths = role.auths
-#         form.auths.data = list(map(lambda v: int(v), auths.split(",")))
-#     if form.validate_on_submit():
-#         data = form.data
-#         role.name = data["name"]
-#         role.auths = ",".join(map(lambda v: str(v), data["auths"]))
-#         db.session.add(role)
-#         db.session.commit()
-#         flash("修改角色成功！", "ok")
-#     return render_template("admin/role_edit.html", form=form, role=role)
-#
-#
-# # 角色列表
-# @admin.route("/role/list/<int:page>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def role_list(page=None):
-#     if page is None:
-#         page = 1
-#     page_data = Role.query.order_by(
-#         Role.addtime.desc()
-#     ).paginate(page=page, per_page=10)
-#     return render_template("admin/role_list.html", page_data=page_data)
-#
-#
-# # 删除角色
-# @admin.route("/role/del/<int:id>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def role_del(id=None):
-#     role = Role.query.filter_by(id=id).first_or_404()
-#     db.session.delete(role)
-#     db.session.commit()
-#     flash("删除角色成功！", "ok")
-#     return redirect(url_for('admin.role_list', page=1))
-#
-#
-# # 权限添加
-# @admin.route("/auth/add/", methods=["GET", "POST"])
-# @admin_login_req
-# # @admin_auth
-# def auth_add():
-#     form = AuthForm()
-#     if form.validate_on_submit():
-#         data = form.data
-#         auth = Auth(
-#             name=data["name"],
-#             url=data["url"]
-#         )
-#         db.session.add(auth)
-#         db.session.commit()
-#         flash("添加权限成功！", "ok")
-#     return render_template("admin/auth_add.html", form=form)
-#
-#
-# # 权限列表
-# @admin.route("/auth/list/<int:page>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def auth_list(page=None):
-#     if page is None:
-#         page = 1
-#     page_data = Auth.query.order_by(
-#         Auth.addtime.desc()
-#     ).paginate(page=page, per_page=10)
-#     return render_template("admin/auth_list.html", page_data=page_data)
-#
-#
-# # 权限删除
-# @admin.route("/auth/del/<int:id>/", methods=["GET"])
-# @admin_login_req
-# # @admin_auth
-# def auth_del(id=None):
-#     auth = Auth.query.filter_by(id=id).first_or_404()
-#     db.session.delete(auth)
-#     db.session.commit()
-#     flash("删除标签成功！", "ok")
-#     return redirect(url_for('admin.auth_list', page=1))
-#
-#
-# # 编辑权限
-# @admin.route("/auth/edit/<int:id>/", methods=["GET", "POST"])
-# @admin_login_req
-# # @admin_auth
-# def auth_edit(id=None):
-#     form = AuthForm()
-#     auth = Auth.query.get_or_404(id)
-#     if form.validate_on_submit():
-#         data = form.data
-#         auth.url = data["url"]
-#         auth.name = data["name"]
-#         db.session.add(auth)
-#         db.session.commit()
-#         flash("修改权限成功！", "ok")
-#         redirect(url_for('admin.auth_edit', id=id))
-#     return render_template("admin/auth_edit.html", form=form, auth=auth)
+# 编辑权限
+@admin.route("/auth/edit/<int:id>/", methods=["GET", "POST"])
+@admin_login_req
+# @admin_auth
+def auth_edit(id=None):
+    form = AuthForm()
+    auth = Auth.query.get_or_404(id)
+    if form.validate_on_submit():
+        data = form.data
+        auth.url = data["url"]
+        auth.name = data["name"]
+        db.session.add(auth)
+        db.session.commit()
+        flash("修改权限成功！", "ok")
+        redirect(url_for('admin.auth_edit', id=id))
+    return render_template("admin/auth_edit.html", form=form, auth=auth)
 
 
