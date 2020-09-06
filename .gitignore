@@ -143,4 +143,4 @@ cython_debug/
 .gitignore
 .idea/
 #ÅäÖÃÎÄ¼ş
-config.py
+app/config.py
