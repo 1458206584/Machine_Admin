@@ -86,7 +86,7 @@ def login():
         db.session.add(adminlog)
         db.session.commit()
         return redirect(request.args.get("next") or url_for("admin.index"))
-    return render_template("admin/login.html", form=form)
+    return render_template("admin/login22.html", form=form)
 
 
 # 退出

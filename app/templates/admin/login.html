@@ -1,61 +1,120 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>平台管理系统</title>
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <link rel="shortcut icon" href="{{ url_for('static',filename='base/images/logo.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='admin/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/css/font-awesome.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='ionicons/css/ionicons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='admin/dist/css/AdminLTE.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='admin/plugins/iCheck/square/blue.css') }}">
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+	<title>登录界面</title>
+    <link href="{{ url_for('static',filename='kuxuan/css/default.css') }}" rel="stylesheet" type="text/css" />
+	<!--必要样式-->
+    <link href="{{ url_for('static',filename='kuxuan/css/styles.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static',filename='kuxuan/css/demo.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static',filename='kuxuan/css/loaders.css') }}" rel="stylesheet" type="text/css" />
 </head>
-<body class="hold-transition login-page">
-<div class="login-box">
-    <div class="login-logo">
-        <a href=""><b>平台管理系统</b></a>
-    </div>
-    <div class="login-box-body">
-        {% for msg in get_flashed_messages(category_filter=["err"]) %}
-        <p class="login-box-msg" style="color:red;">{{ msg }}</p>
-        {% endfor %}
-        {% for msg in get_flashed_messages(category_filter=["ok"]) %}
-        <p class="login-box-msg" style="color:green;">{{ msg }}</p>
-        {% endfor %}
-        <form method="POST" id="form-data" novalidate>
-            <div class="form-group has-feedback">
-                {{ form.account }}
-                <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-                {% for err in form.account.errors %}
-                <div class="col-md-12">
-                    <font style="color:red">{{ err }}</font>
+<body>
+	<div class='login'>
+	  <div class='login_title'>
+
+	     <div>
+            <a href=""><b>机器平台管理系统</b></a>
+        </div>
+        <div class="login-box-body">
+            {% for msg in get_flashed_messages(category_filter=["err"]) %}
+            <p class="login-box-msg" style="color:red;">{{ msg }}</p>
+            {% endfor %}
+            {% for msg in get_flashed_messages(category_filter=["ok"]) %}
+            <p class="login-box-msg" style="color:green;">{{ msg }}</p>
+            {% endfor %}
+            <form method="POST" id="form-data" novalidate>
+                <div class="form-group has-feedback">
+                    {{ form.account }}
+                    <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                    {% for err in form.account.errors %}
+                    <div class="col-md-12">
+                        <font style="color:red">{{ err }}</font>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            <div class="form-group has-feedback">
-                {{ form.pwd }}
-                <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-                {% for err in form.pwd.errors %}
-                <div class="col-md-12">
-                    <font style="color:red">{{ err }}</font>
+                <div class="form-group has-feedback">
+                    {{ form.pwd }}
+                    <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                    {% for err in form.pwd.errors %}
+                    <div class="col-md-12">
+                        <font style="color:red">{{ err }}</font>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            <div class="row">
-                <div class="col-xs-8">
+                <div class="row">
+                    <div class="col-xs-8">
+                    </div>
+                    <div class="col-xs-4">
+                        {{ form.submit }}
+                        {{ form.csrf_token }}
+                    </div>
                 </div>
-                <div class="col-xs-4">
-                    {{ form.submit }}
-                    {{ form.csrf_token }}
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-<script src="{{ url_for('static',filename='admin/plugins/jQuery/jQuery-2.2.0.min.js') }}"></script>
-<script src="{{ url_for('static',filename='admin/bootstrap/js/bootstrap.min.js') }}"></script>
-<script src="{{ url_for('static',filename='admin/plugins/iCheck/icheck.min.js') }}"></script>
+            </form>
+        </div>
+
+
+
+          <canvas class="J_codeimg" id="myCanvas" onclick="Code();">对不起，您的浏览器不支持canvas，请下载最新版浏览器!</canvas>
+	      </div>
+	    </div>
+	<div class="OverWindows"></div>
+    <link href="{{ url_for('static',filename='kuxuan/layui/css/layui.css') }}" rel="stylesheet" type="text/css" />
+	<script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="{{ url_for('static',filename='kuxuan/js/jquery-ui.min.js') }}"></script>
+	<script type="text/javascript" src='{{ url_for('static',filename='kuxuan/js/stopExecutionOnTimeout.js?t=1') }}'></script>
+    <script src="{{ url_for('static',filename='kuxuan/layui/layui.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static',filename='kuxuan/js/Particleground.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static',filename='kuxuan/Js/Treatment.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static',filename='kuxuan/js/jquery.mockjax.js') }}" type="text/javascript"></script>
+	<script type="text/javascript">
+	    //粒子背景特效
+	    $('body').particleground({
+	        dotColor: '#E8DFE8',
+	        lineColor: '#133b88'
+	    });
+	    $('input[name="pwd"]').focus(function () {
+	        $(this).attr('type', 'password');
+	    });
+	    $('input[type="text"]').focus(function () {
+	        $(this).prev().animate({ 'opacity': '1' }, 200);
+	    });
+	    $('input[type="text"],input[type="password"]').blur(function () {
+	        $(this).prev().animate({ 'opacity': '.5' }, 200);
+	    });
+	    $('input[name="login"],input[name="pwd"]').keyup(function () {
+	        var Len = $(this).val().length;
+	        if (!$(this).val() == '' && Len >= 5) {
+	            $(this).next().animate({
+	                'opacity': '1',
+	                'right': '30'
+	            }, 200);
+	        } else {
+	            $(this).next().animate({
+	                'opacity': '0',
+	                'right': '20'
+	            }, 200);
+	        }
+	    });
+
+	    var fullscreen = function () {
+	        elem = document.body;
+	        if (elem.webkitRequestFullScreen) {
+	            elem.webkitRequestFullScreen();
+	        } else if (elem.mozRequestFullScreen) {
+	            elem.mozRequestFullScreen();
+	        } else if (elem.requestFullScreen) {
+	            elem.requestFullscreen();
+	        } else {
+	            //浏览器不支持全屏API或已被禁用
+	        }
+	    }
+    </script>
 </body>
 </html>
