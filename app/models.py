@@ -27,6 +27,7 @@ class User(db.Model):
 
 # 权限
 class Auth(db.Model):
+    """权限表"""
     __tablename__ = "auth"
     __table_args__ = {"useexisting": True}
     extend_existing = True
