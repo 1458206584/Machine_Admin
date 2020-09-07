@@ -6,10 +6,10 @@
 # @File    ： forms.py
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField,SelectField
+from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, SelectField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
 
-from app.models import Admin,Auth,Role
+from app.models import Admin, Auth, Role
 
 
 class LoginForm(FlaskForm):
