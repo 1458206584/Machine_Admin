@@ -10,6 +10,57 @@ import datetime
 from app import db
 
 
+# 机器表
+class Machine(db.Model):
+    __tablename__ = 'machine'
+    __table_args__ = {"useexisting": True}
+    extend_existing = True
+    id = db.Column(db.Integer, primary_key=True)  # 编号
+    name = db.Column(db.String(100), unique=True)  # 机器名称
+    url = db.Column(db.String(255), unique=True)  # 机器地址
+    CPU = db.Column(db.String(100))  # CPU
+    RAM = db.Column(db.String(100))  # 内存
+    IPMI = db.Column(db.String(100))  # IPMI地址
+    machineroom_id = db.Column(db.Integer, db.ForeignKey('machineroom.id'))  # 所属机房
+    platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'))  # 所属平台
+    putontime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 上架时间
+    addtime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 添加时间
+
+    def __repr__(self):
+        return "<Machine %r>" % self.name
+
+
+# 平台表
+class Platform(db.Model):
+    __tablename__ = 'platform'
+    __table_args__ = {"useexisting": True}
+    extend_existing = True
+    id = db.Column(db.Integer, primary_key=True)  # 编号
+    name = db.Column(db.String(100), unique=True)  # 平台名称
+    url = db.Column(db.String(255), unique=True)  # 服务器地址
+    addtime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 添加时间
+    machines = db.relationship('Machine', backref='platform')  # 平台外键关联关系
+
+    def __repr__(self):
+        return "<Platform %r>" % self.name
+
+
+# 机房表
+class Machineroom(db.Model):
+    __tablename__ = 'machineroom'
+    __table_args__ = {"useexisting": True}
+    extend_existing = True
+    id = db.Column(db.Integer, primary_key=True)  # 编号
+    name = db.Column(db.String(100), unique=True)  # 机房名称
+    addr = db.Column(db.String(255), unique=True)  # 机房地址
+    addtime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 添加时间
+    machinerooms = db.relationship('Machine', backref='machineroom')  # 机房外键关联关系
+
+    def __repr__(self):
+        return "<Machineroom %r>" % self.name
+
+
+# 用户表
 class User(db.Model):
     __tablename__ = 'user'
     __table_args__ = {"useexisting": True}
