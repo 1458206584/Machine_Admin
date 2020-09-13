@@ -1,14 +1,16 @@
 # coding:utf8
-from . import admin
-from flask import render_template, redirect, url_for, flash, session, request, abort
-from app.admin.forms import LoginForm,AdminForm,PwdForm,RoleForm,AuthForm
-from app.models import Admin,  Oplog, Adminlog,Role,Auth
-from functools import wraps
-from app import db, app
-from werkzeug.utils import secure_filename
+import datetime
 import os
 import uuid
-import datetime
+from functools import wraps
+
+from flask import render_template, redirect, url_for, flash, session, request, abort
+from werkzeug.utils import secure_filename
+
+from app import db, app
+from app.admin.forms import LoginForm, AdminForm, PwdForm, RoleForm, AuthForm, MachineForm
+from app.models import Admin, Oplog, Adminlog, Role, Auth, Machine, Machineroom, Platform
+from . import admin
 
 
 # 上下应用处理器
@@ -98,6 +100,107 @@ def logout():
     return redirect(url_for("admin.login"))
 
 
+# 机器列表
+@admin.route("/machine/list/<int:page>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def machine_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Machine.query.join(
+        Machineroom,
+        Platform
+    ).filter(
+        Machineroom.id == Machine.machineroom_id,
+        Platform.id == Machine.platform_id
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/machine_list.html", page_data=page_data)
+
+
+# 添加机器
+@admin.route("/machine/add/", methods=["GET", "POST"])
+@admin_login_req
+# @admin_auth
+def machine_add():
+    print(session['admin'])
+    print(session['admin_id'])
+    form = MachineForm()
+    if form.validate_on_submit():
+        data = form.data
+        machine = Machine(
+            name=data["name"],
+            url=data["url"],
+            CPU=data["CPU"],
+            RAM=data["RAM"],
+            IPMI=data["IPMI"],
+            machineroom_id=data["machineroom_id"],
+            platform_id=data["platform_id"],
+            putontime=data["putontime"],
+        )
+        db.session.add(machine)
+        # db.session.commit()
+        # 加入操作日志
+        adminlog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason='添加机器：{}信息'.format(data['name'])
+        )
+        db.session.add(adminlog)
+        db.session.commit()
+        flash("添加机器成功！", "ok")
+        return redirect(url_for('admin.machine_list', page=1))
+    return render_template("admin/machine_add.html", form=form)
+
+
+# 编辑机器
+@admin.route("/machine/edit/<int:id>/", methods=["GET", "POST"])
+@admin_login_req
+# @admin_auth
+def machine_edit(id=None):
+    form = MachineForm()
+    machine = Machine.query.get_or_404(id)
+    if form.validate_on_submit():
+        data = form.data
+        machine.url = data["url"]
+        machine.name = data["name"]
+        machine.CPU = data["CPU"]
+        machine.RAM = data["RAM"]
+        machine.IPMI = data["IPMI"]
+        machine.machineroom_id= data["machineroom_id"]
+        machine.platform_id = data["platform_id"]
+        machine.putontime = data["putontime"]
+        # 加入操作列表
+        adminlog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason='修改机器：{}的信息'.format(machine.name)
+        )
+        db.session.add(adminlog)
+        db.session.add(machine)
+        db.session.commit()
+        flash("修改机器信息成功！", "ok")
+        return redirect(url_for('admin.machine_list', id=id,page=1))
+    return render_template("admin/machine_edit.html", form=form,machine=machine)
+
+
+# 删除机器
+@admin.route("/machine/del/<int:id>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def machine_del(id=None):
+    machine = Machine.query.filter_by(id=id).first_or_404()
+    db.session.delete(machine)
+    # 加入操作列表
+    adminlog = Oplog(
+        admin_id=session['admin_id'],
+        ip=request.remote_addr,
+        reason='删除机器：{}信息'.format(machine.name)
+    )
+    db.session.add(adminlog)
+    db.session.commit()
+    flash("删除角色成功！", "ok")
+    return redirect(url_for('admin.machine_list', page=1))
+
 
 # 添加管理员
 @admin.route("/admin/add/", methods=["GET", "POST"])
@@ -136,6 +239,7 @@ def admin_list(page=None):
     ).paginate(page=page, per_page=10)
     return render_template("admin/admin_list.html", page_data=page_data)
 
+
 # 修改密码
 @admin.route("/pwd/", methods=["GET", "POST"])
 @admin_login_req
@@ -151,6 +255,7 @@ def pwd():
         flash("修改密码成功，请重新登录！", "ok")
         redirect(url_for('admin.logout'))
     return render_template("admin/pwd.html", form=form)
+
 
 # 添加角色
 @admin.route("/role/add/", methods=["GET", "POST"])
@@ -169,6 +274,7 @@ def role_add():
         flash("添加角色成功！", "ok")
     return render_template("admin/role_add.html", form=form)
 
+
 # 角色列表
 @admin.route("/role/list/<int:page>/", methods=["GET"])
 @admin_login_req
@@ -180,6 +286,7 @@ def role_list(page=None):
         Role.addtime.desc()
     ).paginate(page=page, per_page=10)
     return render_template("admin/role_list.html", page_data=page_data)
+
 
 # 编辑角色
 @admin.route("/role/edit/<int:id>/", methods=["GET", "POST"])
@@ -199,6 +306,7 @@ def role_edit(id=None):
         db.session.commit()
         flash("修改角色成功！", "ok")
     return render_template("admin/role_edit.html", form=form, role=role)
+
 
 # 删除角色
 @admin.route("/role/del/<int:id>/", methods=["GET"])
@@ -246,8 +354,6 @@ def adminloginlog_list(page=None):
     return render_template("admin/adminloginlog_list.html", page_data=page_data)
 
 
-
-
 # 权限添加
 @admin.route("/auth/add/", methods=["GET", "POST"])
 @admin_login_req
@@ -264,6 +370,8 @@ def auth_add():
         db.session.commit()
         flash("添加权限成功！", "ok")
     return render_template("admin/auth_add.html", form=form)
+
+
 #
 #
 # 权限列表
@@ -308,5 +416,3 @@ def auth_edit(id=None):
         flash("修改权限成功！", "ok")
         redirect(url_for('admin.auth_edit', id=id))
     return render_template("admin/auth_edit.html", form=form, auth=auth)
-
-

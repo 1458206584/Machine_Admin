@@ -6,10 +6,10 @@
 # @File    ： forms.py
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, SelectField,DateTimeField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
 
-from app.models import Admin, Auth, Role
+from app.models import Admin, Auth, Role,Machineroom,Machine,Platform
 
 
 class LoginForm(FlaskForm):
@@ -93,6 +93,95 @@ class PwdForm(FlaskForm):
         ).first()
         if not admin.check_pwd(pwd):
             raise ValidationError("旧密码错误！")
+
+class MachineForm(FlaskForm):
+    name = StringField(
+        label="机器名称",
+        validators=[
+            DataRequired("请输入机器名称！")
+        ],
+        description="机器名称",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入机器名称！",
+        }
+    )
+    url = StringField(
+        label="机器IP",
+        validators=[
+            DataRequired("请输入机器IP！")
+        ],
+        description="机器IP",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入机器IP！",
+        }
+    )
+    CPU = StringField(
+        label="CPU型号",
+        description="CPU型号",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入CPU型号！",
+        }
+    )
+    RAM = StringField(
+        label="内存容量",
+        validators=[
+            DataRequired("请输入内存容量！")
+        ],
+        description="内存容量",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入内存容量！",
+        }
+    )
+    IPMI = StringField(
+        label="IPMI地址",
+        validators=[
+            DataRequired("请输入IPMI地址！")
+        ],
+        description="IPMI地址",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入IPMI地址！",
+        }
+    )
+    machineroom_id = SelectField(
+        label="所属机房",
+        coerce=int,
+        choices=[(v.id, v.name) for v in Machineroom.query.all()],
+        render_kw={
+            "class": "form-control",
+        }
+    )
+    platform_id = SelectField(
+        label="所属平台",
+        coerce=int,
+        choices=[(v.id, v.name) for v in Platform.query.all()],
+        render_kw={
+            "class": "form-control",
+        }
+    )
+    putontime =  StringField(
+        label="上架时间",
+        validators=[
+            DataRequired("请选择上架时间！")
+        ],
+        description="上架时间",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请选择上架时间！",
+            "id": "input_release_time"
+        }
+    )
+    submit = SubmitField(
+        '提交',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+
 
 
 class AuthForm(FlaskForm):

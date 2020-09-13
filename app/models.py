@@ -23,7 +23,7 @@ class Machine(db.Model):
     IPMI = db.Column(db.String(100))  # IPMI地址
     machineroom_id = db.Column(db.Integer, db.ForeignKey('machineroom.id'))  # 所属机房
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'))  # 所属平台
-    putontime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 上架时间
+    putontime = db.Column(db.Date)  # 上架时间
     addtime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 添加时间
 
     def __repr__(self):
@@ -150,7 +150,7 @@ class Oplog(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 编号
     admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 所属会员
     ip = db.Column(db.String(100))  # 登录ip
-    reason = db.column(db.String(600))  # 操作原因
+    reason = db.Column(db.String(600))  # 操作原因
     addtime = db.Column(db.DateTime, index=True, default=datetime.datetime.now)  # 登录时间
 
     def __repr__(self):
